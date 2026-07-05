@@ -72,14 +72,20 @@ function renderCard(card) {
   const overdue = card.due && card.due < todayIso() && card.column !== 'Done';
   const list = card.checklist || [];
   const ticked = list.filter(i => i.done).length;
+  const pct = list.length ? Math.round(ticked / list.length * 100) : 0;
   el.innerHTML = `
     <div class="title"></div>
     <div class="meta">
       <span class="badge stream"><span class="dot"></span></span>
-      ${list.length ? `<span class="badge checks ${ticked === list.length ? 'complete' : ''}">✓ ${ticked}/${list.length}</span>` : ''}
+      ${list.length ? `<span class="badge checks ${pct === 100 ? 'complete' : ''}">✓ ${ticked}/${list.length}</span>` : ''}
       ${card.due ? `<span class="badge ${overdue ? 'overdue' : ''}">due ${card.due}</span>` : ''}
       ${card.waitingOn ? `<span class="badge">⏳ ${escapeHtml(card.waitingOn)}</span>` : ''}
-    </div>`;
+    </div>
+    ${list.length ? `
+    <div class="progressRow">
+      <div class="progress"><div class="bar ${pct === 100 ? 'complete' : ''}" style="width:${pct}%"></div></div>
+      <span class="pct">${pct}%</span>
+    </div>` : ''}`;
   el.querySelector('.title').textContent = card.title;
   el.querySelector('.dot').style.background = streamColor(card.stream);
   el.querySelector('.stream').appendChild(document.createTextNode(card.stream));

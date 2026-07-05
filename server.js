@@ -80,7 +80,10 @@ function createServer(dataFile = DEFAULT_DATA) {
       res.end('Not found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(full).toLowerCase()] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(full).toLowerCase()] || 'application/octet-stream',
+      'Cache-Control': 'no-store'
+    });
     res.end(fs.readFileSync(full));
   });
 }

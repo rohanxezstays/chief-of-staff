@@ -31,6 +31,7 @@ powershell -NoProfile -Command ^
   "if ($browser) { $s.TargetPath = $browser; $s.Arguments = '--app=http://localhost:4820' }" ^
   "else { $s.TargetPath = 'http://localhost:4820' };" ^
   "$s.Description = 'Chief of Staff board';" ^
+  "if (Test-Path '%~dp0icon.ico') { $s.IconLocation = '%~dp0icon.ico,0' };" ^
   "$s.Save()"
 
 echo [3/3] Starting server now...

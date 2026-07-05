@@ -1,0 +1,6 @@
+data/board.json
+data/backups/
+briefs/
+meetings/*
+!meetings/README.md
+node_modules/

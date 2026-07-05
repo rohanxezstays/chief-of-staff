@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "columns": ["Inbox", "This Week", "Doing", "Waiting On", "Done"],
+  "streams": ["Marketing", "Sales", "Operations", "Personal"],
+  "cards": [
+    {
+      "id": "cexample01",
+      "title": "Welcome! Click me to edit, or drag me to another column",
+      "notes": "This is your board. Add cards with the + Add button, or ask your Claude assistant in plain words.",
+      "stream": "Personal",
+      "column": "Inbox",
+      "due": null,
+      "waitingOn": null,
+      "created": "2026-01-01T00:00:00Z",
+      "updated": "2026-01-01T00:00:00Z",
+      "done": null
+    }
+  ]
+}

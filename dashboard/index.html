@@ -20,12 +20,29 @@
     <label>Stream <select name="stream"></select></label>
     <label>Due <input name="due" type="date"></label>
     <label>Waiting on <input name="waitingOn" placeholder="person / company"></label>
+    <div class="checkSection">
+      Stages
+      <ul id="checkList"></ul>
+      <input id="checkNew" type="text" placeholder="add a stage, press Enter">
+    </div>
     <menu>
       <button value="delete" class="danger">Delete</button>
       <button value="cancel">Cancel</button>
       <button value="save" class="primary">Save</button>
     </menu>
   </form>
+</dialog>
+
+<dialog id="streamDialog">
+  <h3>Streams</h3>
+  <ul id="streamList"></ul>
+  <div id="streamAdd">
+    <input id="streamNew" type="text" placeholder="new stream name">
+    <button id="streamAddBtn" type="button" class="primary">Add</button>
+  </div>
+  <menu>
+    <button id="streamClose" type="button">Close</button>
+  </menu>
 </dialog>
 
 <script src="app.js"></script>

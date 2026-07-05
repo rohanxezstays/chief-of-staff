@@ -34,6 +34,7 @@ start-dashboard.bat   double-click launcher: starts server, opens browser
 | `column` | one of `columns` |
 | `due` | `YYYY-MM-DD` or `null` |
 | `waitingOn` | person/company blocking this, or `null` |
+| `checklist` | stages inside the card: array of `{ "text": string, "done": bool }` (may be absent on old cards — treat as `[]`) |
 | `created` / `updated` | ISO timestamps |
 | `done` | ISO timestamp when moved to Done, else `null` |
 
@@ -74,6 +75,9 @@ Example card:
 | "what's stalled?" | cards in Doing/This Week with `updated` > 5 days old |
 | "what am I waiting on?" | cards in Waiting On, sorted oldest `updated` first, with day counts |
 | "delete the test card" | confirm title first, then remove |
+| "add stages to pixel card: buy domain, install pixel, test events" | set `checklist` with those items, `done: false` |
+| "tick 'install pixel' on the pixel card" | set that checklist item `done: true`, update `updated` |
+| "add stream Events" / "remove stream Events" | edit `streams` array (removal only if no cards use it) |
 
 ## Daily brief
 

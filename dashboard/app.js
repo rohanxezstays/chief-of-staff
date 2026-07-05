@@ -267,6 +267,8 @@ $('#editDialog').addEventListener('close', () => {
     return;
   }
   if (action !== 'save') return;
+  const leftover = $('#checkNew').value.trim();
+  if (leftover) editChecklist.push({ text: leftover, done: false });
   const form = $('#editForm');
   card.title = form.title.value.trim() || card.title;
   card.notes = form.notes.value;

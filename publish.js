@@ -32,27 +32,28 @@ const html = `<!DOCTYPE html>
 :root { --bg:#12141a; --col:#1b1e27; --card:#242836; --text:#e8e9ee; --muted:#9aa0b0; --accent:#6c8cff; --danger:#ff6b6b; --green:#34d399; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,Segoe UI,sans-serif; }
-header { display:flex; align-items:center; gap:12px; padding:14px 20px; flex-wrap:wrap; }
-header img { height:26px; }
+header { display:flex; align-items:center; gap:12px; padding:14px 16px 6px; flex-wrap:wrap; }
+header img { height:24px; }
 h1 { font-size:16px; margin:0; }
 .sub { font-size:11px; color:var(--muted); margin-left:auto; }
-#board { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; padding:0 20px 20px; align-items:start; }
-.column { background:var(--col); border-radius:10px; padding:10px; min-height:80px; }
-.column h2 { font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:2px 4px 10px; display:flex; justify-content:space-between; }
-.card { background:var(--card); border-radius:8px; padding:10px 12px; margin-bottom:8px; }
-.title { font-weight:600; }
-.meta { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
-.badge { border-radius:4px; padding:1px 6px; background:#333a4d; }
+#summary { display:flex; gap:8px; flex-wrap:wrap; padding:6px 16px 14px; font-size:11px; color:var(--muted); }
+#summary .badge { background:var(--col); }
+#streams { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:12px; padding:0 16px 20px; align-items:start; }
+.stream { background:var(--col); border-radius:10px; padding:10px 12px; }
+.stream h2 { font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:2px 2px 8px; display:flex; align-items:center; gap:8px; }
+.stream h2 .count { margin-left:auto; font-weight:400; }
+.row { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:7px; background:var(--card); margin-bottom:6px; }
+.row .name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.row.done .name { color:var(--muted); text-decoration:line-through; }
+.badge { border-radius:4px; padding:1px 6px; background:#333a4d; font-size:10px; color:var(--muted); white-space:nowrap; }
 .badge.overdue { background:var(--danger); color:#fff; }
-.dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:1px; }
-.progressRow { display:flex; align-items:center; gap:8px; margin-top:8px; }
-.progress { flex:1; height:5px; background:#333a4d; border-radius:999px; overflow:hidden; }
-.bar { height:100%; background:var(--accent); border-radius:999px; }
-.bar.complete { background:var(--green); }
-.pct { font-size:10px; color:var(--muted); min-width:28px; text-align:right; }
-footer { text-align:center; color:var(--muted); font-size:11px; padding:10px 0 24px; }
-@media (max-width:1000px) { #board { grid-template-columns:1fr 1fr; } }
-@media (max-width:600px) { #board { grid-template-columns:1fr; } }
+.badge.doneb { color:var(--green); }
+.dot { width:7px; height:7px; border-radius:50%; flex:none; }
+.mini { width:52px; height:4px; background:#333a4d; border-radius:999px; overflow:hidden; flex:none; }
+.mini .bar { height:100%; background:var(--accent); }
+.mini .bar.complete { background:var(--green); }
+.pct { font-size:10px; color:var(--muted); width:30px; text-align:right; flex:none; }
+footer { text-align:center; color:var(--muted); font-size:11px; padding:6px 0 24px; }
 </style>
 </head>
 <body>
@@ -61,7 +62,8 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:10px 0 2
   <h1>Board</h1>
   <span class="sub">read-only · updated ${publishedAt} IST</span>
 </header>
-<main id="board"></main>
+<div id="summary"></div>
+<main id="streams"></main>
 <footer>Published from Chief of Staff</footer>
 <script>
 const board = ${safeJson};
@@ -69,29 +71,43 @@ const PALETTE = ${JSON.stringify(PALETTE)};
 const streamColor = s => { const i = board.streams.indexOf(s); return i >= 0 ? PALETTE[i % PALETTE.length] : '#9aa0b0'; };
 const today = new Date().toISOString().slice(0, 10);
 const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-const root = document.getElementById('board');
-for (const col of board.columns) {
-  const cards = board.cards.filter(c => c.column === col);
+
+// summary strip: totals per workflow column
+const summary = document.getElementById('summary');
+summary.innerHTML = '<span class="badge">' + board.cards.length + ' cards</span>' +
+  board.columns.map(col => {
+    const n = board.cards.filter(c => c.column === col).length;
+    return n ? '<span class="badge">' + esc(col) + ' ' + n + '</span>' : '';
+  }).join('');
+
+// one section per stream, compact rows
+const root = document.getElementById('streams');
+const columnRank = Object.fromEntries(board.columns.map((c, i) => [c, i]));
+for (const stream of board.streams) {
+  const cards = board.cards
+    .filter(c => c.stream === stream)
+    .sort((a, b) => (a.column === 'Done') - (b.column === 'Done') || columnRank[b.column] - columnRank[a.column]);
+  if (!cards.length) continue;
+  const doneN = cards.filter(c => c.column === 'Done').length;
   const sec = document.createElement('section');
-  sec.className = 'column';
-  sec.innerHTML = '<h2><span>' + esc(col) + '</span><span>' + cards.length + '</span></h2>';
+  sec.className = 'stream';
+  sec.innerHTML = '<h2><span class="dot" style="background:' + streamColor(stream) + '"></span>' + esc(stream) +
+    '<span class="count">' + (doneN ? doneN + '/' : '') + cards.length + '</span></h2>';
   for (const c of cards) {
     const list = c.checklist || [];
     const ticked = list.filter(i => i.done).length;
-    const pct = list.length ? Math.round(ticked / list.length * 100) : 0;
+    const pct = list.length ? Math.round(ticked / list.length * 100) : null;
     const overdue = c.due && c.due < today && c.column !== 'Done';
-    const el = document.createElement('article');
-    el.className = 'card';
-    el.innerHTML =
-      '<div class="title">' + esc(c.title) + '</div>' +
-      '<div class="meta">' +
-        '<span class="badge"><span class="dot" style="background:' + streamColor(c.stream) + '"></span>' + esc(c.stream) + '</span>' +
-        (c.due ? '<span class="badge' + (overdue ? ' overdue' : '') + '">due ' + esc(c.due) + '</span>' : '') +
-        (c.waitingOn ? '<span class="badge">⏳ ' + esc(c.waitingOn) + '</span>' : '') +
-        (list.length ? '<span class="badge">✓ ' + ticked + '/' + list.length + '</span>' : '') +
-      '</div>' +
-      (list.length ? '<div class="progressRow"><div class="progress"><div class="bar' + (pct === 100 ? ' complete' : '') + '" style="width:' + pct + '%"></div></div><span class="pct">' + pct + '%</span></div>' : '');
-    sec.appendChild(el);
+    const row = document.createElement('div');
+    row.className = 'row' + (c.column === 'Done' ? ' done' : '');
+    row.innerHTML =
+      '<span class="name">' + esc(c.title) + '</span>' +
+      (c.column === 'Done' ? '<span class="badge doneb">done</span>'
+        : c.column !== 'Inbox' ? '<span class="badge">' + esc(c.column) + '</span>' : '') +
+      (overdue ? '<span class="badge overdue">due ' + esc(c.due) + '</span>' : c.due && c.column !== 'Done' ? '<span class="badge">due ' + esc(c.due) + '</span>' : '') +
+      (c.waitingOn ? '<span class="badge">⏳ ' + esc(c.waitingOn) + '</span>' : '') +
+      (pct !== null ? '<span class="mini"><span class="bar' + (pct === 100 ? ' complete' : '') + '" style="width:' + pct + '%; display:block"></span></span><span class="pct">' + pct + '%</span>' : '');
+    sec.appendChild(row);
   }
   root.appendChild(sec);
 }

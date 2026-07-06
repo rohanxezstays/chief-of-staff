@@ -4,3 +4,5 @@ briefs/
 meetings/*
 !meetings/README.md
 node_modules/
+# personal branding — cloners drop their own logo.png in dashboard/
+dashboard/logo.png

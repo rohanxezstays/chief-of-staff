@@ -5,6 +5,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, Segoe UI, sans-serif; }
+body::after { content: ''; position: fixed; inset: 0; background: url('logo.png') center / min(52vw, 460px) no-repeat; opacity: .06; filter: brightness(1.7); pointer-events: none; z-index: 5; }
 header { display: flex; align-items: center; gap: 20px; padding: 14px 20px; }
 h1 { font-size: 17px; margin: 0; letter-spacing: .3px; }
 #filters { display: flex; gap: 8px; flex-wrap: wrap; }

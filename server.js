@@ -59,6 +59,17 @@ function createServer(dataFile = DEFAULT_DATA, leadsFile = DEFAULT_LEADS) {
     '/api/leads': { file: leadsFile, validate: p => Array.isArray(p.leads), error: 'payload must have leads[]' }
   };
   return http.createServer((req, res) => {
+    // leads hold phone numbers — owner-only. Tunnel traffic reaches us
+    // over loopback, so the remote IP is useless; the Host header is
+    // what the tunnel routes by, so it reliably marks external requests.
+    if (req.url.startsWith('/api/leads')) {
+      const host = String(req.headers.host || '');
+      if (!/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end('{"error":"leads are private to the owner"}');
+        return;
+      }
+    }
     const resource = resources[req.url];
     if (resource && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });

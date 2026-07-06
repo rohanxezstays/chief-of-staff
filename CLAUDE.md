@@ -93,6 +93,10 @@ Plain-word examples: "new lead: Aman from Meta, Galgotias" → add with status `
 
 **Privacy rule: leads (names/phones) are NEVER published to the public board link.**
 
+## Live interactive sharing (tunnel)
+
+"share live" / "give me an editable link" → run `share-live.bat` (or the same ssh command in background) — opens a localhost.run tunnel to the local server and prints a public https URL. Anyone with it can view AND edit the real board (drag, add, tick stages) live. Leads API returns 403 through the tunnel (Host-header guard in server.js) — phone numbers never leave this PC. URL changes each time the tunnel restarts; PC + server must stay on. Stop sharing: close the tunnel window / kill the ssh process.
+
 ## Publishing the board (share link)
 
 "publish board" / "update the share link" → run `node publish.js`. Generates `viewer/index.html` (read-only snapshot, board only, no leads) and force-pushes to https://github.com/rohanxezstays/ezstays-board → live at **https://rohanxezstays.github.io/ezstays-board/**. Anyone with the link can view (public, noindex). Publish is manual — board changes do not auto-publish.

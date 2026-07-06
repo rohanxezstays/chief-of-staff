@@ -26,7 +26,15 @@ const uid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).sli
 
 async function load() {
   board = await (await fetch('/api/board')).json();
-  leadsDoc = await (await fetch('/api/leads')).json();
+  const leadsRes = await fetch('/api/leads');
+  if (leadsRes.ok) {
+    leadsDoc = await leadsRes.json();
+  } else {
+    // remote visitor via shared tunnel — leads are owner-only
+    leadsDoc = { version: 1, leads: [] };
+    $('#tabLeads').style.display = 'none';
+    view = 'board';
+  }
   render();
 }
 

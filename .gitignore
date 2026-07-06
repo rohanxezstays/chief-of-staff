@@ -6,3 +6,6 @@ meetings/*
 node_modules/
 # personal branding — cloners drop their own logo.png in dashboard/
 dashboard/logo.png
+# private lead data + generated public snapshot
+data/leads.json
+viewer/

@@ -55,6 +55,24 @@ test('POST with invalid shape returns 400 and does not write', async () => {
   server.close();
 });
 
+test('leads API: GET bootstraps empty ledger, POST writes with backup', async () => {
+  const file = tmpBoard();
+  const leadsFile = path.join(path.dirname(file), 'leads.json');
+  const server = createServer(file, leadsFile);
+  const port = await listen(server);
+  const j1 = await (await fetch(`http://localhost:${port}/api/leads`)).json();
+  assert.deepEqual(j1.leads, []);
+  const r2 = await fetch(`http://localhost:${port}/api/leads`, {
+    method: 'POST', body: JSON.stringify({ version: 1, leads: [{ id: 'l1', name: 'Aman', status: 'new' }] })
+  });
+  assert.equal(r2.status, 200);
+  const written = JSON.parse(fs.readFileSync(leadsFile, 'utf8'));
+  assert.equal(written.leads.length, 1);
+  const backups = fs.readdirSync(path.join(path.dirname(file), 'backups')).filter(f => f.startsWith('leads-'));
+  assert.equal(backups.length, 1);
+  server.close();
+});
+
 test('static path traversal is blocked', async () => {
   const file = tmpBoard();
   const server = createServer(file);

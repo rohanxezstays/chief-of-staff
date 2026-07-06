@@ -10,9 +10,14 @@ function streamColor(stream) {
   return i >= 0 ? PALETTE[i % PALETTE.length] : 'var(--muted)';
 }
 
+const LEAD_STATUSES = ['new', 'contacted', 'visited', 'booked', 'lost'];
+
 let board = null;
+let leadsDoc = null;
+let view = 'board'; // 'board' | 'leads'
 let activeStream = null; // null = all
 let editingId = null;
+let editingLeadId = null;
 let editChecklist = []; // working copy while edit dialog is open
 
 const $ = sel => document.querySelector(sel);
@@ -21,6 +26,17 @@ const uid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).sli
 
 async function load() {
   board = await (await fetch('/api/board')).json();
+  leadsDoc = await (await fetch('/api/leads')).json();
+  render();
+}
+
+async function saveLeads() {
+  const res = await fetch('/api/leads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(leadsDoc)
+  });
+  if (!res.ok) alert('Save failed — is the server running?');
   render();
 }
 
@@ -39,6 +55,10 @@ function touch(card) {
 }
 
 function render() {
+  $('#tabBoard').classList.toggle('active', view === 'board');
+  $('#tabLeads').classList.toggle('active', view === 'leads');
+  $('#filters').style.display = view === 'board' ? '' : 'none';
+  if (view === 'leads') { renderLeads(); return; }
   renderFilters();
   const root = $('#board');
   root.innerHTML = '';
@@ -93,6 +113,111 @@ function renderCard(card) {
   el.onclick = () => openEdit(card.id);
   return el;
 }
+
+function renderLeads() {
+  const root = $('#board');
+  root.innerHTML = '';
+  for (const status of LEAD_STATUSES) {
+    const colEl = document.createElement('section');
+    colEl.className = 'column';
+    const leads = leadsDoc.leads.filter(l => l.status === status);
+    colEl.innerHTML = `<h2><span>${status}</span><span>${leads.length}</span></h2>`;
+    for (const l of leads) colEl.appendChild(renderLead(l));
+    if (status === 'new') {
+      const add = document.createElement('button');
+      add.className = 'addBtn';
+      add.textContent = '+ Add lead';
+      add.onclick = () => openLead(null);
+      colEl.appendChild(add);
+    }
+    colEl.ondragover = e => { e.preventDefault(); colEl.classList.add('dragover'); };
+    colEl.ondragleave = () => colEl.classList.remove('dragover');
+    colEl.ondrop = e => {
+      e.preventDefault();
+      colEl.classList.remove('dragover');
+      moveLead(e.dataTransfer.getData('text/plain'), status);
+    };
+    root.appendChild(colEl);
+  }
+}
+
+function renderLead(l) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.draggable = true;
+  const age = Math.floor((Date.now() - new Date(l.created)) / 86400000);
+  el.innerHTML = `
+    <div class="title"></div>
+    <div class="meta">
+      <span class="badge src"></span>
+      ${l.university ? `<span class="badge uni"></span>` : ''}
+      <span class="badge">${age}d</span>
+    </div>`;
+  el.querySelector('.title').textContent = l.name;
+  el.querySelector('.src').textContent = l.source;
+  if (l.university) el.querySelector('.uni').textContent = l.university;
+  el.ondragstart = e => e.dataTransfer.setData('text/plain', l.id);
+  el.onclick = () => openLead(l.id);
+  return el;
+}
+
+function moveLead(id, status) {
+  const l = leadsDoc.leads.find(x => x.id === id);
+  if (!l || l.status === status) return;
+  l.status = status;
+  l.updated = new Date().toISOString();
+  saveLeads();
+}
+
+function openLead(id) {
+  editingLeadId = id;
+  const form = $('#leadForm');
+  const l = id ? leadsDoc.leads.find(x => x.id === id) : null;
+  form.name.value = l ? l.name : '';
+  form.phone.value = l ? (l.phone || '') : '';
+  form.source.value = l ? l.source : 'Meta';
+  form.university.value = l ? (l.university || '') : '';
+  form.notes.value = l ? (l.notes || '') : '';
+  $('#leadDialog').showModal();
+}
+
+$('#leadDialog').addEventListener('close', () => {
+  const action = $('#leadDialog').returnValue;
+  const form = $('#leadForm');
+  const id = editingLeadId;
+  editingLeadId = null;
+  if (action === 'delete' && id) {
+    const l = leadsDoc.leads.find(x => x.id === id);
+    if (l && confirm(`Delete lead "${l.name}"?`)) {
+      leadsDoc.leads = leadsDoc.leads.filter(x => x.id !== id);
+      saveLeads();
+    }
+    return;
+  }
+  if (action !== 'save' || !form.name.value.trim()) return;
+  const now = new Date().toISOString();
+  if (id) {
+    const l = leadsDoc.leads.find(x => x.id === id);
+    if (!l) return;
+    l.name = form.name.value.trim();
+    l.phone = form.phone.value.trim();
+    l.source = form.source.value;
+    l.university = form.university.value.trim();
+    l.notes = form.notes.value;
+    l.updated = now;
+  } else {
+    leadsDoc.leads.push({
+      id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: form.name.value.trim(), phone: form.phone.value.trim(),
+      source: form.source.value, university: form.university.value.trim(),
+      status: 'new', notes: form.notes.value, created: now, updated: now
+    });
+  }
+  saveLeads();
+});
+
+$('#tabBoard').onclick = () => { view = 'board'; render(); };
+$('#tabLeads').onclick = () => { view = 'leads'; render(); };
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));

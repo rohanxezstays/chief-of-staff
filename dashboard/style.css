@@ -9,6 +9,9 @@ body::after { content: ''; position: fixed; inset: 0; background: url('logo.png'
 header { display: flex; align-items: center; gap: 20px; padding: 14px 20px; }
 h1 { font-size: 17px; margin: 0; letter-spacing: .3px; }
 #filters { display: flex; gap: 8px; flex-wrap: wrap; }
+#tabs { display: flex; gap: 2px; background: var(--col); border-radius: 8px; padding: 3px; }
+.tab { border: none; background: transparent; color: var(--muted); padding: 4px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.tab.active { background: var(--card); color: var(--text); }
 .chip { border: 1px solid #333a4d; border-radius: 999px; padding: 3px 12px; cursor: pointer; color: var(--muted); background: transparent; font-size: 12px; }
 .chip.active { color: var(--text); border-color: var(--accent); background: rgba(108,140,255,.12); }
 #board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 0 20px 20px; align-items: start; }

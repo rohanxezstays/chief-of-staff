@@ -9,6 +9,10 @@
 <body>
 <header>
   <h1>Chief of Staff</h1>
+  <nav id="tabs">
+    <button id="tabBoard" class="tab active" type="button">Board</button>
+    <button id="tabLeads" class="tab" type="button">Leads</button>
+  </nav>
   <div id="filters"></div>
 </header>
 <main id="board"></main>
@@ -25,6 +29,25 @@
       <ul id="checkList"></ul>
       <input id="checkNew" type="text" placeholder="add a stage, press Enter">
     </div>
+    <menu>
+      <button value="delete" class="danger">Delete</button>
+      <button value="cancel">Cancel</button>
+      <button value="save" class="primary">Save</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="leadDialog">
+  <form method="dialog" id="leadForm">
+    <label>Name <input name="name" required></label>
+    <label>Phone <input name="phone" placeholder="+91..."></label>
+    <label>Source
+      <select name="source">
+        <option>Meta</option><option>Organic</option><option>Walk-in</option><option>Referral</option><option>Other</option>
+      </select>
+    </label>
+    <label>University <input name="university" placeholder="Galgotias / Sharda / ..."></label>
+    <label>Notes <textarea name="notes" rows="2"></textarea></label>
     <menu>
       <button value="delete" class="danger">Delete</button>
       <button value="cancel">Cancel</button>

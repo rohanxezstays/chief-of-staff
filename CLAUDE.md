@@ -85,6 +85,18 @@ Example card:
 - Rules it applies: overdue = `due` before today; stalled = Doing/This Week untouched > 5 days; waiting = Waiting On untouched > 3 days.
 - After generating, tell Rohan the top items in **3 lines max**, overdue first. If calm, one line.
 
+## Lead ledger
+
+`data/leads.json` — `{ version, leads[] }`, each lead: `id`, `name`, `phone`, `source` (Meta/Organic/Walk-in/Referral/Other), `university`, `status` (`new → contacted → visited → booked → lost`), `notes`, `created`, `updated`. API: `GET/POST http://localhost:4820/api/leads` (same backup rules as board; backups prefixed `leads-`). Dashboard has a Leads tab (pipeline kanban).
+
+Plain-word examples: "new lead: Aman from Meta, Galgotias" → add with status `new`; "mark Aman contacted" → status + `updated`; "who's uncontacted?" → status `new`, oldest first. Daily brief flags `new` leads untouched > 2 days and shows pipeline counts.
+
+**Privacy rule: leads (names/phones) are NEVER published to the public board link.**
+
+## Publishing the board (share link)
+
+"publish board" / "update the share link" → run `node publish.js`. Generates `viewer/index.html` (read-only snapshot, board only, no leads) and force-pushes to https://github.com/rohanxezstays/ezstays-board → live at **https://rohanxezstays.github.io/ezstays-board/**. Anyone with the link can view (public, noindex). Publish is manual — board changes do not auto-publish.
+
 ## Meetings
 
 The assistant can capture Google Meet calls: live captions → full transcript + essential notes, action items land in board Inbox. Full procedure: `meetings/README.md`. Outputs: `meetings/YYYY-MM-DD-<topic>-transcript.md` and `...-notes.md`.

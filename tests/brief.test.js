@@ -65,3 +65,36 @@ test('summary line has per-column counts', () => {
   assert.match(out, /Inbox: 1/);
   assert.match(out, /Done: 1/);
 });
+
+function lead(over) {
+  return Object.assign({
+    id: 'l1', name: 'Aman', phone: '', source: 'Meta', university: 'Galgotias',
+    status: 'new', notes: '', created: '2026-07-04T09:00:00Z', updated: '2026-07-04T09:00:00Z'
+  }, over);
+}
+
+test('new lead uncontacted >2 days flagged in Leads section', () => {
+  const leads = [lead({ name: 'Priya', created: '2026-07-02T09:00:00Z', updated: '2026-07-02T09:00:00Z' })];
+  const out = generateBrief(board([]), TODAY, leads);
+  assert.match(out, /## Leads/);
+  assert.match(out, /Priya.*uncontacted 3 days/);
+});
+
+test('fresh new lead and non-new statuses not flagged', () => {
+  const leads = [lead({}), lead({ id: 'l2', name: 'Booked Guy', status: 'booked', created: '2026-06-01T09:00:00Z', updated: '2026-06-01T09:00:00Z' })];
+  const out = generateBrief(board([]), TODAY, leads);
+  assert.doesNotMatch(out, /## Leads/);
+});
+
+test('leads pipeline counts in summary when leads exist', () => {
+  const leads = [lead({}), lead({ id: 'l2', status: 'booked' })];
+  const out = generateBrief(board([]), TODAY, leads);
+  assert.match(out, /new: 1/);
+  assert.match(out, /booked: 1/);
+});
+
+test('brief without leads arg unchanged (backward compatible)', () => {
+  const out = generateBrief(board([]), TODAY);
+  assert.doesNotMatch(out, /## Leads/);
+  assert.match(out, /Nothing due, stalled, or waiting today/);
+});

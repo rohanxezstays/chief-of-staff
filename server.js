@@ -5,8 +5,9 @@ const path = require('path');
 
 const ROOT = __dirname;
 const DEFAULT_DATA = path.join(ROOT, 'data', 'board.json');
+const DEFAULT_LEADS = path.join(ROOT, 'data', 'leads.json');
 const DASHBOARD = path.join(ROOT, 'dashboard');
-const PORT = process.env.COS_PORT ? Number(process.env.COS_PORT) : 4820;
+const PORT = Number(process.env.COS_PORT || process.env.PORT || 4820);
 const MAX_BACKUPS = 50;
 
 const MIME = {
@@ -37,31 +38,42 @@ function ensureBoard(dataFile) {
 function backupBoard(dataFile) {
   const backups = path.join(path.dirname(dataFile), 'backups');
   fs.mkdirSync(backups, { recursive: true });
+  const prefix = path.basename(dataFile, '.json');
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  fs.copyFileSync(dataFile, path.join(backups, `board-${stamp}.json`));
-  const files = fs.readdirSync(backups).filter(f => f.startsWith('board-')).sort();
+  fs.copyFileSync(dataFile, path.join(backups, `${prefix}-${stamp}.json`));
+  const files = fs.readdirSync(backups).filter(f => f.startsWith(prefix + '-')).sort();
   while (files.length > MAX_BACKUPS) fs.unlinkSync(path.join(backups, files.shift()));
 }
 
-function createServer(dataFile = DEFAULT_DATA) {
+function ensureLeads(leadsFile) {
+  if (fs.existsSync(leadsFile)) return;
+  fs.mkdirSync(path.dirname(leadsFile), { recursive: true });
+  fs.writeFileSync(leadsFile, JSON.stringify({ version: 1, leads: [] }, null, 2));
+}
+
+function createServer(dataFile = DEFAULT_DATA, leadsFile = DEFAULT_LEADS) {
   ensureBoard(dataFile);
+  ensureLeads(leadsFile);
+  const resources = {
+    '/api/board': { file: dataFile, validate: p => Array.isArray(p.cards) && Array.isArray(p.columns), error: 'board must have cards[] and columns[]' },
+    '/api/leads': { file: leadsFile, validate: p => Array.isArray(p.leads), error: 'payload must have leads[]' }
+  };
   return http.createServer((req, res) => {
-    if (req.url === '/api/board' && req.method === 'GET') {
+    const resource = resources[req.url];
+    if (resource && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(fs.readFileSync(dataFile));
+      res.end(fs.readFileSync(resource.file));
       return;
     }
-    if (req.url === '/api/board' && req.method === 'POST') {
+    if (resource && req.method === 'POST') {
       let body = '';
       req.on('data', chunk => { body += chunk; });
       req.on('end', () => {
         try {
           const parsed = JSON.parse(body);
-          if (!Array.isArray(parsed.cards) || !Array.isArray(parsed.columns)) {
-            throw new Error('board must have cards[] and columns[]');
-          }
-          backupBoard(dataFile);
-          fs.writeFileSync(dataFile, JSON.stringify(parsed, null, 2));
+          if (!resource.validate(parsed)) throw new Error(resource.error);
+          backupBoard(resource.file);
+          fs.writeFileSync(resource.file, JSON.stringify(parsed, null, 2));
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end('{"ok":true}');
         } catch (err) {
@@ -100,4 +112,4 @@ if (require.main === module) {
   server.listen(PORT, () => console.log(`Chief of Staff dashboard: http://localhost:${PORT}`));
 }
 
-module.exports = { createServer, backupBoard, ensureBoard };
+module.exports = { createServer, backupBoard, ensureBoard, ensureLeads };

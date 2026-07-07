@@ -28,7 +28,7 @@ powershell -NoProfile -Command ^
   "};" ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
   "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Chief of Staff.lnk');" ^
-  "if ($browser) { $s.TargetPath = $browser; $s.Arguments = '--app=http://localhost:4820' }" ^
+  "if ($browser) { $s.TargetPath = $browser; $s.Arguments = '--app=http://localhost:4820 --user-data-dir=\"' + $env:LOCALAPPDATA + '\ChiefOfStaffApp\"' }" ^
   "else { $s.TargetPath = 'http://localhost:4820' };" ^
   "$s.Description = 'Chief of Staff board';" ^
   "if (Test-Path '%~dp0icon.ico') { $s.IconLocation = '%~dp0icon.ico,0' };" ^

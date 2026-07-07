@@ -78,6 +78,7 @@ Example card:
 | "add stages to pixel card: buy domain, install pixel, test events" | set `checklist` with those items, `done: false` |
 | "tick 'install pixel' on the pixel card" | set that checklist item `done: true`, update `updated` |
 | "add stream Events" / "remove stream Events" | edit `streams` array (removal only if no cards use it) |
+| "rename stream Events to Partnerships" | rename in `streams` array AND update `stream` on every card that used the old name |
 
 ## Daily brief
 

@@ -267,14 +267,23 @@ function renderStreamList() {
     dot.className = 'dot';
     dot.style.background = streamColor(s);
     const name = document.createElement('span');
+    name.className = 'sname';
     name.textContent = s;
+    name.title = 'Click to rename';
+    name.onclick = () => renameStream(s);
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'rm edit';
+    edit.textContent = '✎';
+    edit.title = 'Rename stream';
+    edit.onclick = () => renameStream(s);
     const rm = document.createElement('button');
     rm.type = 'button';
     rm.className = 'rm';
     rm.textContent = '✕';
     rm.title = 'Remove stream';
     rm.onclick = () => removeStream(s);
-    li.append(dot, name, rm);
+    li.append(dot, name, edit, rm);
     ul.appendChild(li);
   }
 }
@@ -289,6 +298,24 @@ function addStream() {
   }
   board.streams.push(name);
   input.value = '';
+  save();
+  renderStreamList();
+}
+
+function renameStream(oldName) {
+  const next = prompt(`Rename stream "${oldName}" to:`, oldName);
+  if (next === null) return;
+  const name = next.trim();
+  if (!name || name === oldName) return;
+  if (board.streams.some(s => s.toLowerCase() === name.toLowerCase())) {
+    alert('That stream name already exists.');
+    return;
+  }
+  board.streams = board.streams.map(s => s === oldName ? name : s);
+  for (const c of board.cards) {
+    if (c.stream === oldName) { c.stream = name; touch(c); }
+  }
+  if (activeStream === oldName) activeStream = name;
   save();
   renderStreamList();
 }

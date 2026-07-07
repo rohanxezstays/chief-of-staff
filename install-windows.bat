@@ -20,6 +20,8 @@ powershell -NoProfile -Command ^
   "$s.Save()"
 
 echo [2/3] Desktop app shortcut...
+if not exist "%LOCALAPPDATA%\ChiefOfStaffApp" mkdir "%LOCALAPPDATA%\ChiefOfStaffApp"
+if not exist "%LOCALAPPDATA%\ChiefOfStaffApp\First Run" type nul > "%LOCALAPPDATA%\ChiefOfStaffApp\First Run"
 powershell -NoProfile -Command ^
   "$browser = $null;" ^
   "foreach ($k in 'chrome.exe','msedge.exe') {" ^
@@ -28,7 +30,7 @@ powershell -NoProfile -Command ^
   "};" ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
   "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Chief of Staff.lnk');" ^
-  "if ($browser) { $s.TargetPath = $browser; $s.Arguments = '--app=http://localhost:4820 --user-data-dir=\"' + $env:LOCALAPPDATA + '\ChiefOfStaffApp\"' }" ^
+  "if ($browser) { $s.TargetPath = $browser; $s.Arguments = '--app=http://localhost:4820 --user-data-dir=\"' + $env:LOCALAPPDATA + '\ChiefOfStaffApp\" --no-first-run --no-default-browser-check' }" ^
   "else { $s.TargetPath = 'http://localhost:4820' };" ^
   "$s.Description = 'Chief of Staff board';" ^
   "if (Test-Path '%~dp0icon.ico') { $s.IconLocation = '%~dp0icon.ico,0' };" ^

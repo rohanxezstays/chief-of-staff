@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: chief-of-staff
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
+    envVars:
+      - key: GIST_ID
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: BOARD_PASSWORD
+        sync: false

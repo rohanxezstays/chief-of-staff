@@ -11,6 +11,12 @@ const VIEWER = path.join(ROOT, 'viewer');
 
 const board = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'board.json'), 'utf8'));
 
+// Streams named "Confidential" (or "Private") never leave this PC — strip
+// their cards and the stream itself from the public snapshot entirely.
+const HIDDEN = /^(confidential|private)$/i;
+board.streams = board.streams.filter(s => !HIDDEN.test(s));
+board.cards = board.cards.filter(c => !HIDDEN.test(c.stream));
+
 const logoFile = path.join(ROOT, 'dashboard', 'logo.png');
 const logoDataUri = fs.existsSync(logoFile)
   ? `data:image/png;base64,${fs.readFileSync(logoFile).toString('base64')}`
